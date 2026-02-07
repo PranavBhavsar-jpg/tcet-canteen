@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCET Canteen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .hide-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans pb-24">
+
+    <nav class="glass-nav fixed top-0 w-full z-50 px-4 py-3 flex justify-between items-center shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="bg-orange-500 text-white p-2 rounded-lg">
+                <i class="fas fa-utensils"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight">TCET Canteen</h1>
+                <p class="text-xs text-gray-500">Tasty & Hygienic</p>
+            </div>
+        </div>
+        <button onclick="toggleCart()" class="relative p-2 text-gray-600 hover:text-orange-600 transition">
+            <i class="fas fa-shopping-bag text-xl"></i>
+            <span id="cart-badge"
+                class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+        </button>
+    </nav>
+
+    <div class="mt-20 px-4">
+        <div class="relative mb-6">
+            <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+            <input type="text" id="search-input" placeholder="Search for Vada Pav, Frankie..."
+                class="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition"
+                onkeyup="filterMenu()">
+        </div>
+
+        <div class="flex gap-3 overflow-x-auto hide-scroll pb-2 mb-4" id="category-container">
+        </div>
+    </div>
+
+    <main class="px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="menu-container">
+    </main>
+
+    <div id="bottom-cart-bar"
+        class="fixed bottom-4 left-4 right-4 bg-gray-900 text-white p-4 rounded-2xl shadow-2xl flex justify-between items-center z-40 transform translate-y-[150%] transition-transform duration-300 cursor-pointer"
+        onclick="toggleCart()">
+        <div class="flex flex-col">
+            <span class="text-xs text-gray-400 uppercase font-semibold">Total</span>
+            <span class="text-xl font-bold">₹<span id="bar-total">0</span></span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-sm font-medium"><span id="bar-count">0</span> items</span>
+            <div class="bg-orange-500 p-2 rounded-full h-8 w-8 flex items-center justify-center">
+                <i class="fas fa-chevron-right text-xs"></i>
+            </div>
+        </div>
+    </div>
+
+    <div id="cart-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onclick="toggleCart()"></div>
+
+        <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-[0_-5px_30px_rgba(0,0,0,0.1)] h-[85vh] flex flex-col transform transition-transform duration-300 translate-y-full"
+            id="cart-sheet">
+
+            <div class="w-full flex justify-center pt-3 pb-1" onclick="toggleCart()">
+                <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+            </div>
+
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-800">Your Order</h2>
+                <button onclick="clearCart()"
+                    class="text-red-500 text-sm font-medium hover:bg-red-50 px-3 py-1 rounded-lg transition">Clear
+                    All</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-4" id="cart-items-container">
+                <div class="text-center text-gray-400 mt-10">
+                    <i class="fas fa-shopping-basket text-4xl mb-3 opacity-50"></i>
+                    <p>Your cart is empty</p>
+                    <button onclick="toggleCart()" class="mt-4 text-orange-600 font-medium">Browse Menu</button>
+                </div>
+            </div>
+
+            <div class="p-6 bg-gray-50 border-t border-gray-100">
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Subtotal</span>
+                    <span class="font-bold">₹<span id="cart-subtotal">0</span></span>
+                </div>
+                <div class="flex justify-between mb-6 text-sm text-gray-500">
+                    <span>Tax (5%)</span>
+                    <span>₹<span id="cart-tax">0</span></span>
+                </div>
+                <div class="flex justify-between mb-6 text-xl font-bold text-gray-900">
+                    <span>Grand Total</span>
+                    <span>₹<span id="cart-final-total">0</span></span>
+                </div>
+                <button onclick="checkout()"
+                    class="w-full bg-orange-600 hover:bg-orange-700 text-white py-4 rounded-xl font-bold shadow-lg shadow-orange-200 transition active:scale-95 flex justify-between px-6 items-center">
+                    <span>Place Order</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-modal"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-8 w-[90%] max-w-sm text-center transform scale-90 transition-transform duration-300"
+            id="success-content">
+            <div
+                class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500 text-3xl">
+                <i class="fas fa-check"></i>
+            </div>
+            <h3 class="text-2xl font-bold mb-2">Order Placed!</h3>
+            <p class="text-gray-500 mb-4">Your token number is <span class="text-orange-600 font-bold">#TCET-89</span>.
+                Please pick up your food in 10 mins.</p>
+
+            <button onclick="closeSuccess()" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold">Okay, Got
+                it</button>
+        </div>
+    </div>
+
+
+    <script>
+
+        const categories = ["All", "Snacks", "Beverages", "Lunch", "Chinese"];
+
+        const menuItems = [
+            { id: 1, name: "Vada Pav", price: 15, category: "Snacks", image: "🍔", desc: "Classic Mumbai burger with spicy chutney" },
+            { id: 2, name: "Samosa Pav", price: 18, category: "Snacks", image: "🥟", desc: "Crispy samosa served inside a pav" },
+            { id: 3, name: "Masala Chai", price: 10, category: "Beverages", image: "☕", desc: "Hot refreshing tea with spices" },
+            { id: 4, name: "Cold Coffee", price: 35, category: "Beverages", image: "🥤", desc: "Chilled coffee with chocolate topping" },
+            { id: 5, name: "Veg Schezwan Frankie", price: 50, category: "Snacks", image: "🌯", desc: "Spicy schezwan vegetable roll" },
+            { id: 6, name: "Cheese Frankie", price: 60, category: "Snacks", image: "🌯", desc: "Loaded with cheese and veggies" },
+            { id: 7, name: "Veg Hakka Noodles", price: 80, category: "Chinese", image: "🍜", desc: "Stir-fried noodles with veggies" },
+            { id: 8, name: "Veg Fried Rice", price: 75, category: "Chinese", image: "🍚", desc: "Classic chinese fried rice" },
+            { id: 9, name: "Mini Thali", price: 60, category: "Lunch", image: "🍛", desc: "3 Roti, Sabzi, Dal, Rice, Pickle" },
+            { id: 10, name: "Chole Bhature", price: 70, category: "Lunch", image: "🥘", desc: "Spicy chole with 2 fluffy bhaturas" },
+            { id: 11, name: "Idli Sambhar", price: 40, category: "Snacks", image: "🥯", desc: "2 Idlis with coconut chutney & sambhar" },
+            { id: 12, name: "Medu Vada", price: 45, category: "Snacks", image: "🍩", desc: "Crispy dal vadas with chutney" }
+        ];
+
+        let cart = {};
+        let activeCategory = "All";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCategories();
+            renderMenu();
+        });
+
+        function renderCategories() {
+            const container = document.getElementById('category-container');
+            container.innerHTML = categories.map(cat => `
+                <button onclick="setCategory('${cat}')" 
+                    class="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition border ${activeCategory === cat
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                }">
+                    ${cat}
+                </button>
+            `).join('');
+        }
+
+        function renderMenu(searchTerm = "") {
+            const container = document.getElementById('menu-container');
+
+            const filtered = menuItems.filter(item => {
+                const matchesCat = activeCategory === "All" || item.category === activeCategory;
+                const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+                return matchesCat && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-10 text-gray-400">
+                        <p>No items found.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                const qty = cart[item.id] || 0;
+                return `
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex gap-4 fade-in">
+                    <div class="h-24 w-24 bg-gray-100 rounded-xl flex items-center justify-center text-4xl shrink-0">
+                        ${item.image}
+                    </div>
+                    <div class="flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-gray-800 leading-tight mb-1">${item.name}</h3>
+                            <p class="text-xs text-gray-500 line-clamp-1">${item.desc}</p>
+                        </div>
+                        <div class="flex justify-between items-end mt-2">
+                            <span class="font-bold text-gray-900">₹${item.price}</span>
+                            ${qty === 0 ? `
+                                <button onclick="addToCart(${item.id})" class="bg-orange-100 text-orange-600 hover:bg-orange-200 px-4 py-1.5 rounded-lg text-sm font-bold transition">
+                                    ADD
+                                </button>
+                            ` : `
+                                <div class="flex items-center bg-orange-50 rounded-lg overflow-hidden border border-orange-100">
+                                    <button onclick="updateQty(${item.id}, -1)" class="px-3 py-1 text-orange-600 hover:bg-orange-200 transition font-bold">-</button>
+                                    <span class="text-sm font-bold text-orange-700 w-4 text-center">${qty}</span>
+                                    <button onclick="updateQty(${item.id}, 1)" class="px-3 py-1 text-orange-600 hover:bg-orange-200 transition font-bold">+</button>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // --- ACTIONS ---
+        function setCategory(cat) {
+            activeCategory = cat;
+            renderCategories();
+            renderMenu(document.getElementById('search-input').value);
+        }
+
+        function filterMenu() {
+            renderMenu(document.getElementById('search-input').value);
+        }
+
+        function addToCart(id) {
+            cart[id] = 1;
+            updateApp();
+        }
+
+        function updateQty(id, change) {
+            if (cart[id] + change <= 0) {
+                delete cart[id];
+            } else {
+                cart[id] += change;
+            }
+            updateApp();
+        }
+
+        function clearCart() {
+            cart = {};
+            updateApp();
+            toggleCart();
+        }
+
+        function updateApp() {
+            renderMenu(document.getElementById('search-input').value); // Re-render menu to show quantity controls
+            updateCartCalculations();
+        }
+
+        function updateCartCalculations() {
+            let count = 0;
+            let total = 0;
+            let cartHTML = '';
+
+            const cartKeys = Object.keys(cart);
+
+            if (cartKeys.length === 0) {
+                document.getElementById('cart-items-container').innerHTML = `
+                    <div class="text-center text-gray-400 mt-10">
+                        <i class="fas fa-shopping-basket text-4xl mb-3 opacity-50"></i>
+                        <p>Your cart is empty</p>
+                        <button onclick="toggleCart()" class="mt-4 text-orange-600 font-medium">Browse Menu</button>
+                    </div>`;
+                document.getElementById('cart-badge').classList.add('hidden');
+                document.getElementById('bottom-cart-bar').classList.remove('translate-y-0');
+                document.getElementById('bottom-cart-bar').classList.add('translate-y-[150%]');
+            } else {
+                cartHTML = cartKeys.map(key => {
+                    const id = parseInt(key);
+                    const item = menuItems.find(i => i.id === id);
+                    const qty = cart[id];
+                    count += qty;
+                    total += item.price * qty;
+
+                    return `
+                    <div class="flex justify-between items-center py-2">
+                        <div class="flex items-center gap-3">
+                            <div class="text-xs border border-green-600 text-green-600 px-1 rounded">Veg</div>
+                            <div>
+                                <h4 class="font-medium text-gray-800">${item.name}</h4>
+                                <div class="text-xs text-gray-500">₹${item.price} x ${qty}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center bg-gray-100 rounded-lg">
+                            <button onclick="updateQty(${id}, -1)" class="px-3 py-1 text-gray-600 hover:text-red-500 font-bold">-</button>
+                            <span class="text-sm font-bold text-gray-900 w-4 text-center">${qty}</span>
+                            <button onclick="updateQty(${id}, 1)" class="px-3 py-1 text-gray-600 hover:text-green-500 font-bold">+</button>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+
+                document.getElementById('cart-items-container').innerHTML = cartHTML;
+
+                document.getElementById('cart-badge').innerText = count;
+                document.getElementById('cart-badge').classList.remove('hidden');
+
+                document.getElementById('bar-count').innerText = count;
+                document.getElementById('bar-total').innerText = total;
+                document.getElementById('bottom-cart-bar').classList.remove('translate-y-[150%]');
+                document.getElementById('bottom-cart-bar').classList.add('translate-y-0');
+            }
+
+            const tax = Math.round(total * 0.05);
+            document.getElementById('cart-subtotal').innerText = total;
+            document.getElementById('cart-tax').innerText = tax;
+            document.getElementById('cart-final-total').innerText = total + tax;
+        }
+
+        // --- MODALS ---
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            const sheet = document.getElementById('cart-sheet');
+
+            if (modal.classList.contains('hidden')) {
+                // Open
+                modal.classList.remove('hidden');
+                // Small delay to allow display:block to apply before transition
+                setTimeout(() => {
+                    sheet.classList.remove('translate-y-full');
+                }, 10);
+            } else {
+                // Close
+                sheet.classList.add('translate-y-full');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        function checkout() {
+            if (Object.keys(cart).length === 0) return;
+            toggleCart(); // Close cart
+
+            const successModal = document.getElementById('success-modal');
+            const successContent = document.getElementById('success-content');
+
+            // Show modal immediately
+            successModal.classList.remove('hidden');
+            setTimeout(() => {
+                successModal.classList.remove('opacity-0');
+                successContent.classList.remove('scale-90');
+                successContent.classList.add('scale-100');
+            }, 10);
+
+            cart = {};
+            updateApp();
+        }
+
+        function closeSuccess() {
+            const successModal = document.getElementById('success-modal');
+            const successContent = document.getElementById('success-content');
+
+            successModal.classList.add('opacity-0');
+            successContent.classList.add('scale-90');
+
+            setTimeout(() => {
+                successModal.classList.add('hidden');
+            }, 300);
+        }
+    </script>
+</body>
+
+</html>
